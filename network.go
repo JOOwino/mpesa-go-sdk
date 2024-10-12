@@ -6,11 +6,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
+func init() {
+	ipAddr, err := GetIpAddress()
+	if err != nil {
+		fmt.Printf("Error while getting IP Address : %v", err)
+	}
+	uri := "http://" + ipAddr + ":8080" + CALLBACK_URI
+	os.Setenv("MPESA_CALL_BACK", uri)
+
+}
+
 const (
+	CALLBACK_URI        = "/stk-push/callback"
 	PRODUCTION_BASE_URL = "https://api.safaricom.co.ke"
 	SANDBOX_BASE_URL    = "https://sandbox.safaricom.co.ke"
 	API_PASSWORD        = "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMTYwMjE2MTY1NjI3"
@@ -44,6 +57,7 @@ func New(key, secret string, isProduction bool) *ApiCall {
 	if isProduction {
 		baseUrl = PRODUCTION_BASE_URL
 	}
+
 	return &ApiCall{
 		apiClient: client,
 		apiKey:    key,
@@ -52,9 +66,6 @@ func New(key, secret string, isProduction bool) *ApiCall {
 		isProd:    isProduction,
 	}
 
-}
-
-type body interface {
 }
 
 func (apiCall *ApiCall) generateToken(ctx context.Context) error {
@@ -124,4 +135,24 @@ func (apiCall *ApiCall) MakeHttpRequest(ctx context.Context, url, method string,
 
 	return res, nil
 
+}
+
+func GetIpAddress() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	var publicIp string
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				publicIp = ipnet.IP.To4().String()
+				fmt.Printf("IP ADDRESS: %s \n", publicIp)
+			}
+		}
+
+	}
+
+	return publicIp, nil
 }

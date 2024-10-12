@@ -11,8 +11,6 @@ import (
 
 func (apiCall *ApiCall) SendStkPush(ctx context.Context, request StkRequest) (*StkAcknowledgement, error) {
 
-	//logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
 	tStamp := time.Now().Format("20060102150405")
 	stkReq := &StkPush{
 		BusinessShortCode: request.BusinessShortCode,
@@ -47,21 +45,6 @@ func (apiCall *ApiCall) SendStkPush(ctx context.Context, request StkRequest) (*S
 		return nil, err
 	}
 	return stkAck, nil
-
-}
-
-func (apiCall *ApiCall) DynamicQRCode(ctx context.Context, req DynamicQRReq) (*DynamicQRRes, error) {
-	var dynamicRes *DynamicQRRes
-
-	res, err := apiCall.MakeApiRequest(ctx, apiCall.baseUrl+"/mpesa/qrcode/v1/generate", req)
-	if err != nil {
-		log.log("DYNAMIC QR CODE", uuid.NewString(), 500, err)
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.log("DYNAMIC QR CODE ERROR", uuid.NewString(), 500, err)
-	}
 
 }
 
